@@ -1,7 +1,14 @@
 import { createGlobalStyle } from "styled-components";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import {
+	DragDropContext,
+	Draggable,
+	Droppable,
+	DropResult,
+} from "react-beautiful-dnd";
 import styled from "styled-components";
+import { useRecoilState } from "recoil";
+import { toDosState } from "./atoms";
 
 const GlobalStyle = createGlobalStyle`
 
@@ -97,18 +104,17 @@ const Card = styled.div`
 	background-color: ${(props) => props.theme.cardColor};
 `;
 
-const toDos = [
-	"(*/ω＼*)",
-	"╰(*°▽°*)╯",
-	"o(*￣▽￣*)ブ",
-	"(/≧▽≦)/",
-	"o((>ω< ))o",
-	"(o^▽^o)",
-	"ヽ(>∀<☆)ノ",
-];
-
 function App() {
-	const onDragEnd = () => {};
+	const [toDos, setToDos] = useRecoilState(toDosState);
+	const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+		if (!destination) return;
+		setToDos((oldToDos) => {
+			const copyToDos = [...oldToDos];
+			copyToDos.splice(source.index, 1);
+			copyToDos.splice(destination.index, 0, draggableId);
+			return copyToDos;
+		});
+	};
 	return (
 		<>
 			<HelmetProvider>
@@ -131,6 +137,7 @@ function App() {
 								>
 									{toDos.map((toDo, index) => (
 										<Draggable
+											key={toDo}
 											draggableId={toDo}
 											index={index}
 										>
