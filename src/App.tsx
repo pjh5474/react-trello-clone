@@ -1,6 +1,7 @@
 import { createGlobalStyle } from "styled-components";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import styled from "styled-components";
 
 const GlobalStyle = createGlobalStyle`
 
@@ -56,13 +57,55 @@ table {
 body {
 	font-family: 'Source Sans Pro', sans-serif;
 	background-color: ${(props) => props.theme.bgColor};
-	color: ${(props) => props.theme.textColor};
+	color: "black";
+	line-height: 1.2;
 }
 a {
 	text-decoration: none;
   color: inherit;
 }
 `;
+
+const Wrapper = styled.div`
+	display: flex;
+	max-width: 480px;
+	width: 100%;
+	margin: 0 auto;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+`;
+
+const Boards = styled.div`
+	display: grid;
+	width: 100%;
+	grid-template-columns: repeat(1, 1fr);
+`;
+
+const Board = styled.div`
+	padding: 20px 10px;
+	padding-top: 30px;
+	background-color: ${(props) => props.theme.boardColor};
+	border-radius: 5px;
+	min-height: 200px;
+`;
+
+const Card = styled.div`
+	border-radius: 5px;
+	margin-bottom: 5px;
+	padding: 10px;
+	background-color: ${(props) => props.theme.cardColor};
+`;
+
+const toDos = [
+	"(*/ω＼*)",
+	"╰(*°▽°*)╯",
+	"o(*￣▽￣*)ブ",
+	"(/≧▽≦)/",
+	"o((>ω< ))o",
+	"(o^▽^o)",
+	"ヽ(>∀<☆)ノ",
+];
 
 function App() {
 	const onDragEnd = () => {};
@@ -78,62 +121,36 @@ function App() {
 			</HelmetProvider>
 			<GlobalStyle />
 			<DragDropContext onDragEnd={onDragEnd}>
-				<div>
-					<Droppable droppableId="one">
-						{(magic) => (
-							<ul
-								ref={magic.innerRef}
-								{...magic.droppableProps}
-							>
-								<Draggable
-									draggableId="first"
-									index={0}
+				<Wrapper>
+					<Boards>
+						<Droppable droppableId="one">
+							{(droppableMagic) => (
+								<Board
+									ref={droppableMagic.innerRef}
+									{...droppableMagic.droppableProps}
 								>
-									{(magic) => (
-										<li
-											ref={magic.innerRef}
-											{...magic.draggableProps}
-											{...magic.dragHandleProps}
+									{toDos.map((toDo, index) => (
+										<Draggable
+											draggableId={toDo}
+											index={index}
 										>
-											<span {...magic.dragHandleProps}>(*/ω＼*)</span>
-											<span>First</span>
-										</li>
-									)}
-								</Draggable>
-								<Draggable
-									draggableId="second"
-									index={1}
-								>
-									{(magic) => (
-										<li
-											ref={magic.innerRef}
-											{...magic.draggableProps}
-										>
-											<span>Second</span>
-											<span {...magic.dragHandleProps}>
-												○( ＾皿＾)っ Drag me!
-											</span>
-										</li>
-									)}
-								</Draggable>
-								<Draggable
-									draggableId="third"
-									index={2}
-								>
-									{(magic) => (
-										<li
-											ref={magic.innerRef}
-											{...magic.draggableProps}
-											{...magic.dragHandleProps}
-										>
-											Third
-										</li>
-									)}
-								</Draggable>
-							</ul>
-						)}
-					</Droppable>
-				</div>
+											{(draggableMagic) => (
+												<Card
+													ref={draggableMagic.innerRef}
+													{...draggableMagic.draggableProps}
+													{...draggableMagic.dragHandleProps}
+												>
+													{toDo}
+												</Card>
+											)}
+										</Draggable>
+									))}
+									{droppableMagic.placeholder}
+								</Board>
+							)}
+						</Droppable>
+					</Boards>
+				</Wrapper>
 			</DragDropContext>
 		</>
 	);
