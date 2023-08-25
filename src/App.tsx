@@ -1,14 +1,11 @@
 import { createGlobalStyle } from "styled-components";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import {
-	DragDropContext,
-	Draggable,
-	Droppable,
-	DropResult,
-} from "react-beautiful-dnd";
+import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import styled from "styled-components";
 import { useRecoilState } from "recoil";
 import { toDosState } from "./atoms";
+import DraggableCard from "./Components/DraggableCard";
+import { useState } from "react";
 
 const GlobalStyle = createGlobalStyle`
 
@@ -97,16 +94,13 @@ const Board = styled.div`
 	min-height: 200px;
 `;
 
-const Card = styled.div`
-	border-radius: 5px;
-	margin-bottom: 5px;
-	padding: 10px;
-	background-color: ${(props) => props.theme.cardColor};
-`;
-
 function App() {
 	const [toDos, setToDos] = useRecoilState(toDosState);
+	const [isRendering, setIsRendering] = useState(false);
+
 	const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+		if (isRendering) return;
+
 		if (!destination) return;
 		setToDos((oldToDos) => {
 			const copyToDos = [...oldToDos];
@@ -114,6 +108,11 @@ function App() {
 			copyToDos.splice(destination.index, 0, draggableId);
 			return copyToDos;
 		});
+		// 드래그 앤 드랍 이후 새 이벤트 발생을 일정시간 막아서 중복 렌더링을 막는다
+		setIsRendering(true);
+		setTimeout(() => {
+			setIsRendering(false);
+		}, 800);
 	};
 	return (
 		<>
@@ -136,21 +135,11 @@ function App() {
 									{...droppableMagic.droppableProps}
 								>
 									{toDos.map((toDo, index) => (
-										<Draggable
+										<DraggableCard
 											key={toDo}
-											draggableId={toDo}
+											toDo={toDo}
 											index={index}
-										>
-											{(draggableMagic) => (
-												<Card
-													ref={draggableMagic.innerRef}
-													{...draggableMagic.draggableProps}
-													{...draggableMagic.dragHandleProps}
-												>
-													{toDo}
-												</Card>
-											)}
-										</Draggable>
+										/>
 									))}
 									{droppableMagic.placeholder}
 								</Board>
