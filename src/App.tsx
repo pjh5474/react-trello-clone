@@ -3,9 +3,9 @@ import { Helmet, HelmetProvider } from "react-helmet-async";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import styled from "styled-components";
 import { useRecoilState } from "recoil";
-import { toDosState } from "./atoms";
-import DraggableCard from "./Components/DraggableCard";
+import { toDosState, IToDosState } from "./atoms";
 import { useState } from "react";
+import Board from "./Components/Board";
 
 const GlobalStyle = createGlobalStyle`
 
@@ -72,7 +72,7 @@ a {
 
 const Wrapper = styled.div`
 	display: flex;
-	max-width: 480px;
+	max-width: 680px;
 	width: 100%;
 	margin: 0 auto;
 	justify-content: center;
@@ -83,31 +83,52 @@ const Wrapper = styled.div`
 const Boards = styled.div`
 	display: grid;
 	width: 100%;
-	grid-template-columns: repeat(1, 1fr);
-`;
-
-const Board = styled.div`
-	padding: 20px 10px;
-	padding-top: 30px;
-	background-color: ${(props) => props.theme.boardColor};
-	border-radius: 5px;
-	min-height: 200px;
+	gap: 10px;
+	grid-template-columns: repeat(3, 1fr);
 `;
 
 function App() {
 	const [toDos, setToDos] = useRecoilState(toDosState);
 	const [isRendering, setIsRendering] = useState(false);
 
-	const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+	const onDragEnd = (info: DropResult) => {
 		if (isRendering) return;
 
+		const { destination, draggableId, source } = info;
 		if (!destination) return;
-		setToDos((oldToDos) => {
-			const copyToDos = [...oldToDos];
-			copyToDos.splice(source.index, 1);
-			copyToDos.splice(destination.index, 0, draggableId);
-			return copyToDos;
-		});
+		if (destination.droppableId === source.droppableId) {
+			// same board movement
+			setToDos((allBoards) => {
+				const boardCopy = [
+					...allBoards[source.droppableId as keyof IToDosState],
+				];
+				boardCopy.splice(source.index, 1);
+				boardCopy.splice(destination.index, 0, draggableId);
+				return {
+					...allBoards,
+					[source.droppableId]: boardCopy,
+				};
+			});
+		}
+
+		if (destination.droppableId !== source.droppableId) {
+			// different board movement
+			setToDos((allBoards) => {
+				const startBoard = [
+					...allBoards[source.droppableId as keyof IToDosState],
+				];
+				const finishBoard = [
+					...allBoards[destination.droppableId as keyof IToDosState],
+				];
+				startBoard.splice(source.index, 1);
+				finishBoard.splice(destination.index, 0, draggableId);
+				return {
+					...allBoards,
+					[source.droppableId]: startBoard,
+					[destination.droppableId]: finishBoard,
+				};
+			});
+		}
 		// 드래그 앤 드랍 이후 새 이벤트 발생을 일정시간 막아서 중복 렌더링을 막는다
 		setIsRendering(true);
 		setTimeout(() => {
@@ -128,23 +149,13 @@ function App() {
 			<DragDropContext onDragEnd={onDragEnd}>
 				<Wrapper>
 					<Boards>
-						<Droppable droppableId="one">
-							{(droppableMagic) => (
-								<Board
-									ref={droppableMagic.innerRef}
-									{...droppableMagic.droppableProps}
-								>
-									{toDos.map((toDo, index) => (
-										<DraggableCard
-											key={toDo}
-											toDo={toDo}
-											index={index}
-										/>
-									))}
-									{droppableMagic.placeholder}
-								</Board>
-							)}
-						</Droppable>
+						{Object.keys(toDos).map((boardId) => (
+							<Board
+								key={boardId}
+								boardId={boardId}
+								toDos={toDos[boardId as "To Do" | "Doing" | "Done"]}
+							/>
+						))}
 					</Boards>
 				</Wrapper>
 			</DragDropContext>
