@@ -99,11 +99,10 @@ function App() {
 		if (destination.droppableId === source.droppableId) {
 			// same board movement
 			setToDos((allBoards) => {
-				const boardCopy = [
-					...allBoards[source.droppableId as keyof IToDosState],
-				];
+				const boardCopy = [...allBoards[source.droppableId]];
+				const taskObj = boardCopy[source.index];
 				boardCopy.splice(source.index, 1);
-				boardCopy.splice(destination.index, 0, draggableId);
+				boardCopy.splice(destination.index, 0, taskObj);
 				return {
 					...allBoards,
 					[source.droppableId]: boardCopy,
@@ -114,14 +113,11 @@ function App() {
 		if (destination.droppableId !== source.droppableId) {
 			// different board movement
 			setToDos((allBoards) => {
-				const startBoard = [
-					...allBoards[source.droppableId as keyof IToDosState],
-				];
-				const finishBoard = [
-					...allBoards[destination.droppableId as keyof IToDosState],
-				];
+				const startBoard = [...allBoards[source.droppableId]];
+				const finishBoard = [...allBoards[destination.droppableId]];
+				const taskObj = startBoard[source.index];
 				startBoard.splice(source.index, 1);
-				finishBoard.splice(destination.index, 0, draggableId);
+				finishBoard.splice(destination.index, 0, taskObj);
 				return {
 					...allBoards,
 					[source.droppableId]: startBoard,
@@ -153,7 +149,7 @@ function App() {
 							<Board
 								key={boardId}
 								boardId={boardId}
-								toDos={toDos[boardId as "To Do" | "Doing" | "Done"]}
+								toDos={toDos[boardId]}
 							/>
 						))}
 					</Boards>
